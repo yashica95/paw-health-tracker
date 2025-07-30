@@ -17,24 +17,36 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 172 82% 36%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 14 89% 69%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 172 15% 95%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 172 20% 92%;
+    --accent-foreground: 172 82% 36%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 172 15% 88%;
+    --input: 172 15% 96%;
+    --ring: 172 82% 36%;
+
+    /* Custom design tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(172 82% 36%), hsl(14 89% 69%));
+    --gradient-soft: linear-gradient(180deg, hsl(172 15% 98%), hsl(0 0% 100%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(172 10% 98%));
+    
+    --shadow-soft: 0 4px 20px -4px hsl(172 82% 36% / 0.1);
+    --shadow-card: 0 8px 25px -5px hsl(172 30% 50% / 0.1);
+    --shadow-float: 0 12px 35px -8px hsl(172 40% 45% / 0.15);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --radius: 0.5rem;
 
