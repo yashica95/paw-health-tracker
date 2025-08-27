@@ -7,7 +7,8 @@ import { HealthLogger } from "@/components/HealthLogger";
 import { HealthDashboard } from "@/components/HealthDashboard";
 import { WeeklyCalendar } from "@/components/WeeklyCalendar";
 import { MedicalRecords } from "@/components/MedicalRecords";
-import { Plus, Heart, Calendar, Activity, TrendingUp, User, FileText } from "lucide-react";
+import { PetSupplies } from "@/components/PetSupplies";
+import { Plus, Heart, Calendar, Activity, TrendingUp, User, FileText, ShoppingCart } from "lucide-react";
 import heroImage from "@/assets/pet-health-hero.jpg";
 
 interface HealthMetrics {
@@ -257,7 +258,7 @@ const Index = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsList className="grid w-full grid-cols-5 mb-6">
                 <TabsTrigger value="calendar" className="flex items-center space-x-2">
                   <Calendar className="h-4 w-4" />
                   <span className="hidden sm:inline">Calendar</span>
@@ -273,6 +274,10 @@ const Index = () => {
                 <TabsTrigger value="medical" className="flex items-center space-x-2">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">Medical</span>
+                </TabsTrigger>
+                <TabsTrigger value="supplies" className="flex items-center space-x-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Supplies</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -305,6 +310,10 @@ const Index = () => {
                   records={medicalRecords}
                   onAddRecord={handleAddMedicalRecord}
                 />
+              </TabsContent>
+
+              <TabsContent value="supplies" className="mt-0">
+                <PetSupplies pet={petData} />
               </TabsContent>
             </Tabs>
           </div>
