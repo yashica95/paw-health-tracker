@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { CalendarIcon, Camera, ArrowLeft } from "lucide-react";
+import { CalendarIcon, Camera, ArrowLeft, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const petFormSchema = z.object({
@@ -27,8 +27,7 @@ const petFormSchema = z.object({
   }),
   weight: z.number().min(0.1, "Weight must be greater than 0"),
   microchipId: z.string().optional(),
-  vetName: z.string().optional(),
-  vetPhone: z.string().optional(),
+  vetId: z.string().optional(),
   allergies: z.string().optional(),
   medications: z.string().optional(),
   notes: z.string().optional(),
@@ -40,9 +39,12 @@ interface EditPetProfileProps {
   onBack: () => void;
   onSave: (data: PetFormValues) => void;
   initialData?: Partial<PetFormValues>;
+  onSelectVet?: (vet: any) => void;
+  vets?: Array<{ id: string; salutationName?: string; firstName?: string; lastName?: string }>;
+  onGoToVets?: () => void;
 }
 
-export const EditPetProfile = ({ onBack, onSave, initialData }: EditPetProfileProps) => {
+export const EditPetProfile = ({ onBack, onSave, initialData, onSelectVet, vets = [], onGoToVets }: EditPetProfileProps) => {
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -56,8 +58,7 @@ export const EditPetProfile = ({ onBack, onSave, initialData }: EditPetProfilePr
       birthDate: initialData?.birthDate || new Date(),
       weight: initialData?.weight || 0,
       microchipId: initialData?.microchipId || "",
-      vetName: initialData?.vetName || "",
-      vetPhone: initialData?.vetPhone || "",
+      vetId: (initialData as any)?.vetId || "",
       allergies: initialData?.allergies || "",
       medications: initialData?.medications || "",
       notes: initialData?.notes || "",
@@ -313,30 +314,42 @@ export const EditPetProfile = ({ onBack, onSave, initialData }: EditPetProfilePr
                         )}
                       />
 
-                      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Primary Vet Selection */}
+                      <div className="md:col-span-2">
                         <FormField
                           control={form.control}
-                          name="vetName"
+                          name="vetId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Veterinarian Name (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Dr. Smith" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="vetPhone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Vet Phone (Optional)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="(555) 123-4567" {...field} />
-                              </FormControl>
+                              <FormLabel>Primary Veterinarian</FormLabel>
+                              <div className="flex gap-2">
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="flex-1">
+                                      <SelectValue placeholder="Select from Saved Vets" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {vets.map(v => (
+                                      <SelectItem key={v.id} value={v.id}>
+                                        {v.salutationName || `${v.firstName||''} ${v.lastName||''}`.trim()}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={onGoToVets}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                  Add Vet
+                                </Button>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Select from your saved vets or add a new one
+                              </p>
                               <FormMessage />
                             </FormItem>
                           )}

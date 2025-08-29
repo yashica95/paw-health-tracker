@@ -31,13 +31,22 @@ interface HealthDashboardProps {
   trends: HealthTrend[];
   reminders: Reminder[];
   overallHealth: number;
+  monthlyCheckinStatus?: {
+    status: 'overdue' | 'due-soon' | 'up-to-date';
+    monthsOverdue?: number;
+    daysUntilDue?: number;
+    message: string;
+  };
+  onMonthlyCheckin?: () => void;
 }
 
 export const HealthDashboard = ({ 
   petName, 
   trends, 
   reminders,
-  overallHealth 
+  overallHealth,
+  monthlyCheckinStatus,
+  onMonthlyCheckin
 }: HealthDashboardProps) => {
   const getTrendIcon = (trend: string) => {
     switch (trend) {
