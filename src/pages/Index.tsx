@@ -1,18 +1,60 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
+import { Toaster } from '@/components/ui/toaster';
+import { useToast } from '@/components/ui/use-toast';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Calendar as CalendarIcon, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  User, 
+  Heart, 
+  PawPrint, 
+  Crown,
+  Trophy,
+  Gift,
+  Target,
+  Zap,
+  Menu,
+  Activity,
+  FileText,
+  ShoppingCart,
+  Image,
+  ChevronRight,
+  TrendingUp,
+  ChevronLeft
+} from 'lucide-react';
+import { format, addDays, subDays, startOfWeek, isSameDay, isToday } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { WeeklyCalendar } from '@/components/WeeklyCalendar';
+import { HealthDashboard } from '@/components/HealthDashboard';
+import { MedicalRecords } from '@/components/MedicalRecords';
+import { PhotoGallery } from '@/components/PhotoGallery';
+import { AddVet } from '@/components/vets/AddOntarioVet';
+import { useParams } from 'react-router-dom';
 import { PetProfile } from "@/components/PetProfile";
 import { EditPetProfile } from "@/components/EditPetProfile";
 import { HealthLogger } from "@/components/HealthLogger";
-import { HealthDashboard } from "@/components/HealthDashboard";
-import { WeeklyCalendar } from "@/components/WeeklyCalendar";
-import { MedicalRecords } from "@/components/MedicalRecords";
 import { PetSupplies } from "@/components/PetSupplies";
-import { Plus, Heart, Calendar, Activity, TrendingUp, User, FileText, ShoppingCart, Image } from "lucide-react";
-import { AddVet } from "@/components/vets/AddOntarioVet";
 import heroImage from "@/assets/pet-health-hero.jpg";
-import { useToast } from "@/components/ui/use-toast";
-import { PhotoGallery } from "@/components/PhotoGallery";
 
 interface HealthMetrics {
   appetite: number;
@@ -52,43 +94,110 @@ interface VetRecord {
   licenseHistory?: Array<{ status: string; className?: string; from: string; to?: string }>;
 }
 
-const Index = () => {
+export default function Index() {
+  const [activeTab, setActiveTab] = useState('calendar');
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [hasSetupPet, setHasSetupPet] = useState(false);
-  const [activeTab, setActiveTab] = useState("calendar");
+  const [showRewards, setShowRewards] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [hasSetupPet, setHasSetupPet] = useState(true); // Set to true since we have sample pets
+  const [selectedPetId, setSelectedPetId] = useState<string>('luna');
   const { toast } = useToast();
 
-  // Sample pet data
-  const [petData, setPetData] = useState({
-    id: "1",
-    name: "Luna",
-    breed: "Golden Retriever",
-    species: "dog",
-    gender: "female",
-    age: 3,
-    weight: 65,
-    photo: "",
-    lastCheckup: "2 weeks ago",
-    healthScore: 87,
-    birthDate: new Date(2021, 5, 15),
-    vetName: "Dr. Sarah Johnson",
-    vetPhone: "(555) 123-4567",
-    allergies: "None known",
-    medications: "Heartworm prevention monthly",
-    notes: "Very active and friendly dog",
-    vetId: "",
-    lastMonthlyCheckin: new Date(2023, 0, 1), // Example last check-in date
-    photos: [] as string[], // Example photos array
-    // Gamification system
-    points: 0,
-    avatarLevel: 1,
-    totalHealthRecords: 0,
-    // Pet sharing system
-    uniqueId: "luna-golden-retriever",
-    shareableLink: ""
-  });
+  // Multiple pets data
+  const [pets, setPets] = useState([
+    {
+      id: 'luna',
+      name: 'Luna',
+      breed: 'Golden Retriever',
+      age: 3,
+      weight: 65,
+      photo: '',
+      lastCheckup: '2024-01-15',
+      healthScore: 85,
+      points: 150,
+      avatarLevel: 2,
+      totalHealthRecords: 45,
+      uniqueId: 'luna-golden-retriever',
+      species: 'Dog',
+      color: 'Golden',
+      microchip: 'CHIP123456',
+      veterinarian: 'Dr. Smith',
+      ownerName: 'John Doe',
+      ownerPhone: '+1-555-0123',
+      ownerEmail: 'john@example.com',
+      emergencyContact: 'Jane Doe',
+      emergencyPhone: '+1-555-0124',
+      medicalNotes: 'Allergic to chicken',
+      photos: [],
+      lastMonthlyCheckin: new Date(2024, 0, 1),
+      vetPhone: '+1-555-0125',
+      vetId: '',
+      vetName: 'Dr. Smith'
+    },
+    {
+      id: 'max',
+      name: 'Max',
+      breed: 'Persian Cat',
+      age: 2,
+      weight: 12,
+      photo: '',
+      lastCheckup: '2024-02-01',
+      healthScore: 92,
+      points: 75,
+      avatarLevel: 1,
+      totalHealthRecords: 28,
+      uniqueId: 'max-persian-cat',
+      species: 'Cat',
+      color: 'White',
+      microchip: 'CHIP789012',
+      veterinarian: 'Dr. Johnson',
+      ownerName: 'John Doe',
+      ownerPhone: '+1-555-0123',
+      ownerEmail: 'john@example.com',
+      emergencyContact: 'Jane Doe',
+      emergencyPhone: '+1-555-0124',
+      medicalNotes: 'Indoor cat, very active',
+      photos: [],
+      lastMonthlyCheckin: new Date(2024, 1, 1),
+      vetPhone: '+1-555-0126',
+      vetId: '',
+      vetName: 'Dr. Johnson'
+    },
+    {
+      id: 'buddy',
+      name: 'Buddy',
+      breed: 'Labrador',
+      age: 5,
+      weight: 70,
+      photo: '',
+      lastCheckup: '2024-01-20',
+      healthScore: 78,
+      points: 320,
+      avatarLevel: 4,
+      totalHealthRecords: 67,
+      uniqueId: 'buddy-labrador',
+      species: 'Dog',
+      color: 'Black',
+      microchip: 'CHIP345678',
+      veterinarian: 'Dr. Smith',
+      ownerName: 'John Doe',
+      ownerPhone: '+1-555-0123',
+      ownerEmail: 'john@example.com',
+      emergencyContact: 'Jane Doe',
+      emergencyPhone: '+1-555-0124',
+      medicalNotes: 'Loves swimming, hip dysplasia monitoring',
+      photos: [],
+      lastMonthlyCheckin: new Date(2024, 0, 15),
+      vetPhone: '+1-555-0125',
+      vetId: '',
+      vetName: 'Dr. Smith'
+    }
+  ]);
 
   const [vets, setVets] = useState<VetRecord[]>([]);
+
+  // Get current selected pet data
+  const petData = pets.find(pet => pet.id === selectedPetId) || pets[0];
 
   // Sample health trends
   const healthTrends = [
@@ -159,9 +268,15 @@ const Index = () => {
   };
 
   const handleSavePetProfile = (data: any) => {
-    setPetData(prev => ({ ...prev, ...data }));
+    setPets(prev => prev.map(pet => 
+      pet.id === selectedPetId ? { ...pet, ...data } : pet
+    ));
     setShowEditProfile(false);
     setHasSetupPet(true);
+    toast({
+      title: "Profile updated!",
+      description: "Your pet's profile has been updated successfully.",
+    });
   };
 
   const upsertVet = (vet: VetRecord) => {
@@ -194,12 +309,9 @@ const Index = () => {
     const newLevel = calculateAvatarLevel(newPoints);
     const newTotalRecords = petData.totalHealthRecords + 1;
     
-    setPetData(prev => ({
-      ...prev,
-      points: newPoints,
-      avatarLevel: newLevel,
-      totalHealthRecords: newTotalRecords
-    }));
+    setPets(prev => prev.map(pet => 
+      pet.id === selectedPetId ? { ...pet, points: newPoints, avatarLevel: newLevel, totalHealthRecords: newTotalRecords } : pet
+    ));
 
     // Show achievement notification
     if (newLevel > petData.avatarLevel) {
@@ -236,7 +348,9 @@ const Index = () => {
   const generateShareableLink = () => {
     const baseUrl = window.location.origin;
     const shareLink = `${baseUrl}/pet/${petData.uniqueId}`;
-    setPetData(prev => ({ ...prev, shareableLink: shareLink }));
+    setPets(prev => prev.map(pet => 
+      pet.id === selectedPetId ? { ...pet, shareableLink: shareLink } : pet
+    ));
     return shareLink;
   };
 
@@ -282,24 +396,25 @@ const Index = () => {
   };
 
   const handleMonthlyCheckin = () => {
-    setPetData(prev => ({
-      ...prev,
-      lastMonthlyCheckin: new Date()
-    }));
+    setPets(prev => prev.map(pet => 
+      pet.id === selectedPetId ? { ...pet, lastMonthlyCheckin: new Date() } : pet
+    ));
   };
 
   const handleAddPhoto = (photoUrl: string) => {
-    setPetData(prev => ({
-      ...prev,
-      photos: [...prev.photos, photoUrl]
-    }));
+    setPets(prev => prev.map(pet => 
+      pet.id === selectedPetId ? { 
+        ...pet, 
+        photos: [...pet.photos, photoUrl],
+        photo: photoUrl // Also update the main photo for immediate background update
+      } : pet
+    ));
   };
 
   const handleRemovePhoto = (photoIndex: number) => {
-    setPetData(prev => ({
-      ...prev,
-      photos: prev.photos.filter((_, index) => index !== photoIndex)
-    }));
+    setPets(prev => prev.map(pet => 
+      pet.id === selectedPetId ? { ...pet, photos: pet.photos.filter((_, index) => index !== photoIndex) } : pet
+    ));
   };
 
   // Derive calendar appointments from upcoming/overdue medical records
@@ -315,6 +430,50 @@ const Index = () => {
       notes: r.notes
     }));
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setShowMobileMenu(false); // Close mobile menu when tab changes
+  };
+
+  const handlePetChange = (petId: string) => {
+    setSelectedPetId(petId);
+    // Reset to calendar tab when switching pets
+    setActiveTab('calendar');
+  };
+
+  const addNewPet = () => {
+    const newPet = {
+      id: `pet-${Date.now()}`,
+      name: 'New Pet',
+      breed: 'Unknown',
+      age: 1,
+      weight: 20,
+      photo: '',
+      lastCheckup: new Date().toISOString().split('T')[0],
+      healthScore: 100,
+      points: 0,
+      avatarLevel: 1,
+      totalHealthRecords: 0,
+      uniqueId: `new-pet-${Date.now()}`,
+      species: 'Dog',
+      color: 'Unknown',
+      microchip: '',
+      veterinarian: '',
+      ownerName: petData.ownerName,
+      ownerPhone: petData.ownerPhone,
+      ownerEmail: petData.ownerEmail,
+      emergencyContact: petData.emergencyContact,
+      emergencyPhone: petData.emergencyPhone,
+      medicalNotes: ''
+    };
+    setPets(prev => [...prev, newPet]);
+    setSelectedPetId(newPet.id);
+    toast({
+      title: "New pet added!",
+      description: "You can now edit the pet's profile.",
+    });
+  };
+
   if (showEditProfile) {
     return (
       <EditPetProfile
@@ -323,7 +482,9 @@ const Index = () => {
         initialData={petData}
         onSelectVet={(vet: any) => {
           upsertVet(vet);
-          setPetData(prev => ({ ...prev, vetId: vet.id, vetName: vet.salutationName || `${vet.firstName||''} ${vet.lastName||''}`.trim(), vetPhone: vet.phone || prev.vetPhone }));
+          setPets(prev => prev.map(pet => 
+            pet.id === selectedPetId ? { ...pet, vetId: vet.id, vetName: vet.salutationName || `${vet.firstName||''} ${vet.lastName||''}`.trim(), vetPhone: vet.phone || prev.vetPhone } : pet
+          ));
         }}
         vets={vets}
         onGoToVets={() => {
@@ -383,16 +544,6 @@ const Index = () => {
           {/* Features */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
             <div className="text-center p-6 rounded-2xl bg-gradient-card shadow-card hover:shadow-float transition-all duration-300 transform hover:scale-105">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Weekly Calendar</h3>
-              <p className="text-sm text-muted-foreground">
-                Track daily food, water, and bathroom habits with our intuitive calendar view.
-              </p>
-            </div>
-            
-            <div className="text-center p-6 rounded-2xl bg-gradient-card shadow-card hover:shadow-float transition-all duration-300 transform hover:scale-105">
               <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText className="h-6 w-6 text-secondary" />
               </div>
@@ -403,12 +554,20 @@ const Index = () => {
             </div>
             
             <div className="text-center p-6 rounded-2xl bg-gradient-card shadow-card hover:shadow-float transition-all duration-300 transform hover:scale-105">
-              <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="h-6 w-6 text-primary" />
-              </div>
+              <TrendingUp className="h-6 w-6 text-primary" />
               <h3 className="text-lg font-semibold mb-2">Health Insights</h3>
               <p className="text-sm text-muted-foreground">
                 Visualize trends and patterns in your pet's health over time.
+              </p>
+            </div>
+            
+            <div className="text-center p-6 rounded-2xl bg-gradient-card shadow-card hover:shadow-float transition-all duration-300 transform hover:scale-105">
+              <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Pet Care</h3>
+              <p className="text-sm text-muted-foreground">
+                Comprehensive tools for monitoring and managing your pet's health.
               </p>
             </div>
           </div>
@@ -427,58 +586,318 @@ const Index = () => {
             <p className="text-muted-foreground">Monitor {petData.name}'s well-being</p>
           </div>
           
-          <Button 
-            variant="outline"
-            onClick={() => setShowEditProfile(true)}
-          >
-            <User className="h-4 w-4 mr-2" />
-            Edit Profile
-          </Button>
+          {/* Pet Selector and Mobile Menu */}
+          <div className="flex items-center space-x-4">
+            {/* Scrollable Pet Cards */}
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    const currentIndex = pets.findIndex(pet => pet.id === selectedPetId);
+                    const prevIndex = currentIndex > 0 ? currentIndex - 1 : pets.length - 1;
+                    handlePetChange(pets[prevIndex].id);
+                  }}
+                  className="p-2 rounded-full hover:bg-accent transition-colors"
+                  title="Previous pet"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                
+                <div className="flex space-x-3 overflow-x-auto scrollbar-hide">
+                  {pets.map((pet) => (
+                    <button
+                      key={pet.id}
+                      onClick={() => handlePetChange(pet.id)}
+                      className={cn(
+                        "flex-shrink-0 p-3 rounded-lg border-2 transition-all duration-200 hover:scale-105",
+                        selectedPetId === pet.id 
+                          ? 'border-primary bg-primary/10 shadow-lg' 
+                          : 'border-border bg-background hover:border-primary/50'
+                      )}
+                    >
+                      <div className="flex items-center space-x-3 min-w-[180px]">
+                        <span className="text-2xl">
+                          {pet.species === 'Dog' ? '🐕' : '🐱'}
+                        </span>
+                        <div className="text-left">
+                          <div className="font-semibold text-sm">{pet.name}</div>
+                          <div className="text-xs text-muted-foreground">{pet.breed}</div>
+                          <div className="text-xs font-medium text-primary">Level {pet.avatarLevel}</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                  
+                  {/* Add New Pet Card */}
+                  <button
+                    onClick={addNewPet}
+                    className="flex-shrink-0 p-3 rounded-lg border-2 border-dashed border-primary/50 hover:border-primary hover:bg-primary/5 transition-all duration-200 hover:scale-105 min-w-[180px]"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Plus className="h-6 w-6 text-primary" />
+                      <div className="text-left">
+                        <div className="font-semibold text-sm text-primary">Add New Pet</div>
+                        <div className="text-xs text-muted-foreground">Create profile</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const currentIndex = pets.findIndex(pet => pet.id === selectedPetId);
+                    const nextIndex = currentIndex < pets.length - 1 ? currentIndex + 1 : 0;
+                    handlePetChange(pets[nextIndex].id);
+                  }}
+                  className="p-2 rounded-full hover:bg-accent transition-colors"
+                  title="Next pet"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Mobile Menu Button */}
+            <div className="lg:hidden">
+              <Sheet open={showMobileMenu} onOpenChange={setShowMobileMenu}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center space-x-2">
+                      <PawPrint className="h-5 w-5" />
+                      <span>Navigation</span>
+                    </SheetTitle>
+                  </SheetHeader>
+                  
+                  <div className="mt-6 space-y-4">
+                    {/* Pet Selector for Mobile */}
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-muted-foreground mb-3">Select Pet</div>
+                      {pets.map((pet) => (
+                        <button
+                          key={pet.id}
+                          onClick={() => {
+                            handlePetChange(pet.id);
+                            setShowMobileMenu(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                            selectedPetId === pet.id 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'bg-background hover:bg-accent border-border'
+                          )}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span className="text-lg">
+                              {pet.species === 'Dog' ? '🐕' : '🐱'}
+                            </span>
+                            <div className="text-left">
+                              <div className="font-medium">{pet.name}</div>
+                              <div className="text-xs opacity-80">{pet.breed}</div>
+                            </div>
+                          </div>
+                          {selectedPetId === pet.id && (
+                            <div className="w-2 h-2 bg-current rounded-full" />
+                          )}
+                        </button>
+                      ))}
+                      
+                      <Button 
+                        onClick={() => {
+                          addNewPet();
+                          setShowMobileMenu(false);
+                        }}
+                        variant="outline" 
+                        className="w-full justify-start"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add New Pet
+                      </Button>
+                    </div>
+
+                    {/* Mobile Tab Navigation */}
+                    <div className="pt-4 border-t">
+                      <div className="text-sm font-medium text-muted-foreground mb-3">Main Sections</div>
+                      
+                      <button
+                        onClick={() => handleTabChange('calendar')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'calendar' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <CalendarIcon className="h-5 w-5" />
+                          <span>Calendar</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleTabChange('dashboard')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'dashboard' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Activity className="h-5 w-5" />
+                          <span>Dashboard</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleTabChange('medical')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'medical' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5" />
+                          <span>Medical Records</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleTabChange('supplies')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'supplies' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <ShoppingCart className="h-5 w-5" />
+                          <span>Supplies</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleTabChange('vets')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'vets' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Heart className="h-5 w-5" />
+                          <span>Vets</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleTabChange('photos')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'photos' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Image className="h-5 w-5" />
+                          <span>Photos</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleTabChange('rewards')}
+                        className={cn(
+                          "w-full flex items-center justify-between p-3 rounded-lg border transition-all",
+                          activeTab === 'rewards' 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-background hover:bg-accent border-border'
+                        )}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Trophy className="h-5 w-5" />
+                          <span>Rewards</span>
+                        </div>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="pt-4 border-t">
+                      <div className="text-sm font-medium text-muted-foreground mb-3">Quick Actions</div>
+                      
+                      <Button 
+                        onClick={() => {
+                          setShowEditProfile(true);
+                          setShowMobileMenu(false);
+                        }}
+                        variant="outline" 
+                        className="w-full justify-start"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Pet Profile Sidebar */}
           <div className="lg:col-span-1">
-            <PetProfile pet={petData} />
+            {/* Pet Profile */}
+            <PetProfile 
+              pet={petData} 
+              onShareProfile={() => {
+                const shareUrl = `${window.location.origin}/pet/${petData.uniqueId}`;
+                navigator.clipboard.writeText(shareUrl);
+                toast({
+                  title: "Profile link copied!",
+                  description: "Share this link with your vet or family members.",
+                });
+              }}
+              onPetChange={handlePetChange}
+              pets={pets}
+              selectedPetId={selectedPetId}
+              onPhotoUpload={handleAddPhoto}
+            />
           </div>
           
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-7 mb-6">
-                <TabsTrigger value="calendar" className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Calendar</span>
-                </TabsTrigger>
-                <TabsTrigger value="dashboard" className="flex items-center space-x-2">
-                  <Activity className="h-4 w-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
-                </TabsTrigger>
-                <TabsTrigger value="logger" className="flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Log Health</span>
-                </TabsTrigger>
-                <TabsTrigger value="medical" className="flex items-center space-x-2">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden sm:inline">Medical</span>
-                </TabsTrigger>
-                <TabsTrigger value="supplies" className="flex items-center space-x-2">
-                  <ShoppingCart className="h-4 w-4" />
-                  <span className="hidden sm:inline">Supplies</span>
-                </TabsTrigger>
-                <TabsTrigger value="vets" className="flex items-center space-x-2">
-                  <Heart className="h-4 w-4" />
-                  <span className="hidden sm:inline">Vets</span>
-                </TabsTrigger>
-                <TabsTrigger value="photos" className="flex items-center space-x-2">
-                  <Image className="h-4 w-4" />
-                  <span className="hidden sm:inline">Photos</span>
-                </TabsTrigger>
-                <TabsTrigger value="rewards" className="flex items-center space-x-2">
-                  <span className="text-lg">🏆</span>
-                  <span className="hidden sm:inline">Rewards</span>
-                </TabsTrigger>
-              </TabsList>
+              {/* Mobile Tab Indicator */}
+              <div className="lg:hidden mb-6">
+                <div className="flex items-center space-x-2 p-3 bg-accent rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    {activeTab === 'calendar' && <CalendarIcon className="h-4 w-4" />}
+                    {activeTab === 'dashboard' && <Activity className="h-4 w-4" />}
+                    {activeTab === 'medical' && <FileText className="h-4 w-4" />}
+                    {activeTab === 'supplies' && <ShoppingCart className="h-4 w-4" />}
+                    {activeTab === 'vets' && <Heart className="h-4 w-4" />}
+                    {activeTab === 'photos' && <Image className="h-4 w-4" />}
+                    {activeTab === 'rewards' && <Trophy className="h-4 w-4" />}
+                  </div>
+                  <span className="font-medium capitalize">{activeTab}</span>
+                </div>
+              </div>
 
               <TabsContent value="calendar" className="mt-0">
                 <WeeklyCalendar 
@@ -494,13 +913,6 @@ const Index = () => {
                   trends={healthTrends}
                   reminders={reminders}
                   overallHealth={petData.healthScore}
-                />
-              </TabsContent>
-
-              <TabsContent value="logger" className="mt-0">
-                <HealthLogger 
-                  petName={petData.name}
-                  onLogHealth={handleAddHealthRecord}
                 />
               </TabsContent>
 
@@ -567,153 +979,6 @@ const Index = () => {
                   petName={petData.name}
                 />
               </TabsContent>
-
-              {/* Rewards & Gamification Tab */}
-              <TabsContent value="rewards" className="mt-0">
-                <div className="space-y-6">
-                  {/* Pet Avatar & Stats */}
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border">
-                    <div className="flex items-center space-x-6">
-                      <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-6xl text-white shadow-lg">
-                        {getAvatarEmoji(petData.avatarLevel)}
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">{petData.name}'s Progress</h3>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <div className="text-3xl font-bold text-blue-600">{petData.points}</div>
-                            <div className="text-sm text-gray-600">Total Points</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-3xl font-bold text-green-600">{petData.totalHealthRecords}</div>
-                            <div className="text-sm text-gray-600">Health Records</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-3xl font-bold text-purple-600">{petData.avatarLevel}</div>
-                            <div className="text-sm text-gray-600">Avatar Level</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Progress Bar */}
-                    <div className="mt-6">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
-                        <span>Level {petData.avatarLevel}</span>
-                        <span>Level {petData.avatarLevel + 1}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-blue-400 to-purple-500 h-3 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min((petData.points % 50) / 50 * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {50 - (petData.points % 50)} points to next level
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rewards Store */}
-                  <div className="bg-white rounded-lg border p-6">
-                    <h3 className="text-xl font-semibold mb-4">🏪 Rewards Store</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">Free Month Subscription</h4>
-                          <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">500 points</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">Get one month of premium features for free!</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={petData.points < 500}
-                          className="w-full"
-                        >
-                          {petData.points >= 500 ? 'Redeem' : 'Need ' + (500 - petData.points) + ' more points'}
-                        </Button>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">20% Off Vet Visit</h4>
-                          <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">200 points</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">Save on your next veterinary appointment</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={petData.points < 200}
-                          className="w-full"
-                        >
-                          {petData.points >= 200 ? 'Redeem' : 'Need ' + (200 - petData.points) + ' more points'}
-                        </Button>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">Pet Toy Bundle</h4>
-                          <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">100 points</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">Get a bundle of fun toys for your pet</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={petData.points < 100}
-                          className="w-full"
-                        >
-                          {petData.points >= 100 ? 'Redeem' : 'Need ' + (100 - petData.points) + ' more points'}
-                        </Button>
-                      </div>
-                      
-                      <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium">Health Report PDF</h4>
-                          <span className="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded">50 points</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">Download a detailed health report</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={petData.points < 50}
-                          className="w-full"
-                        >
-                          {petData.points >= 50 ? 'Redeem' : 'Need ' + (50 - petData.points) + ' more points'}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Pet Sharing Section */}
-                  <div className="bg-white rounded-lg border p-6">
-                    <h3 className="text-xl font-semibold mb-4">🔗 Share Pet Profile</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-gray-100 p-3 rounded-lg flex-1">
-                          <div className="text-xs text-gray-500 mb-1">Pet ID</div>
-                          <div className="font-mono text-sm">{petData.uniqueId}</div>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          onClick={copyShareableLink}
-                          className="flex items-center space-x-2"
-                        >
-                          <span>Copy Link</span>
-                        </Button>
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        Share this link with vets or family members to give them access to {petData.name}'s health dashboard (read-only).
-                      </div>
-                      {petData.shareableLink && (
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <div className="text-xs text-gray-500 mb-1">Shareable Link</div>
-                          <div className="font-mono text-sm break-all">{petData.shareableLink}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
             </Tabs>
           </div>
         </div>
@@ -721,5 +986,3 @@ const Index = () => {
     </div>
   );
 };
-
-export default Index;

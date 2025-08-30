@@ -54,7 +54,7 @@ interface AppointmentItem {
 export const WeeklyCalendar = ({ petName, onMetricsLog, appointments = [], readOnly = false }: WeeklyCalendarProps) => {
   const { toast } = useToast();
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Default to today
   const [showLogger, setShowLogger] = useState(false);
   const [showVetPrompt, setShowVetPrompt] = useState(false);
   const [vetPromptDate, setVetPromptDate] = useState<Date | null>(null);
@@ -269,11 +269,10 @@ export const WeeklyCalendar = ({ petName, onMetricsLog, appointments = [], readO
   const weekDays = getWeekDays(currentWeek);
 
   return (
-    <div className="space-y-6">
-      {/* Calendar Header */}
-      <Card className="p-6 bg-gradient-card shadow-card">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">{petName}'s Health Calendar</h2>
+    <div className="space-y-4">
+      {/* Horizontal Scrollable Week Calendar */}
+      <Card className="p-4 bg-gradient-card shadow-card">
+        <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -282,7 +281,7 @@ export const WeeklyCalendar = ({ petName, onMetricsLog, appointments = [], readO
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[120px] text-center">
+            <span className="text-sm font-medium min-w-[100px] text-center">
               {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
             </span>
             <Button
@@ -295,9 +294,16 @@ export const WeeklyCalendar = ({ petName, onMetricsLog, appointments = [], readO
           </div>
         </div>
 
-        {/* Week View */}
-        <div className="grid grid-cols-7 gap-2">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
+        {/* Horizontal Scrollable Week View */}
+        <div 
+          className="flex justify-center space-x-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth" 
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none',
+            WebkitScrollbar: { display: 'none' }
+          }}
+        >
+          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => {
             const date = weekDays[index];
             const dayData = getDayData(date);
             const isSelectedDate = selectedDate && isSameDay(date, selectedDate);
@@ -306,83 +312,365 @@ export const WeeklyCalendar = ({ petName, onMetricsLog, appointments = [], readO
             const appointment = appointments.find(a => a.date === dateStr) || null;
             
             return (
-              <div key={index} className="text-center">
-                <div className="text-xs font-medium text-muted-foreground mb-2">
+              <div key={index} className="flex flex-col items-center min-w-[50px]">
+                <div className="text-xs font-medium text-muted-foreground mb-1">
                   {day}
                 </div>
                 <div
                   className={`
-                    relative p-3 rounded-lg border-2 transition-all duration-200 min-h-[100px]
-                    ${appointment ? 'border-violet-400 bg-violet-50' : (isTodayDate ? 'border-primary bg-primary/5' : 'border-border bg-background')}
-                    ${isSelectedDate ? 'ring-2 ring-primary ring-offset-2' : ''}
+                    relative w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center cursor-pointer
+                    ${appointment ? 'border-violet-400 bg-violet-50' : (isTodayDate ? 'border-primary bg-primary text-white' : 'border-border bg-background')}
+                    ${isSelectedDate ? 'ring-2 ring-primary ring-offset-2 scale-110' : ''}
                     ${dayData?.logged && !appointment ? 'bg-green-50 border-green-200' : ''}
-                    ${!readOnly ? 'cursor-pointer hover:border-primary/40 hover:shadow-soft' : ''}
+                    ${!readOnly ? 'hover:border-primary/40 hover:shadow-soft hover:scale-105' : ''}
                   `}
                   onClick={() => handleDateSelect(date)}
                 >
-                  <div className="text-sm font-medium mb-2">
+                  <div className="text-xs font-bold">
                     {format(date, 'd')}
                   </div>
 
-                  {/* Appointment pill */}
+                  {/* Appointment indicator */}
                   {appointment && (
-                    <div
-                      className="absolute top-2 left-2 rounded-full bg-violet-600 text-white text-[10px] px-2 py-0.5 max-w-[80%] truncate"
-                      onClick={!readOnly ? (e) => { e.stopPropagation(); setSelectedAppt(appointment); setShowApptDetails(true); } : undefined}
-                      title={`${appointment.title}${appointment.type ? ` • ${appointment.type}` : ''}${!readOnly ? ' - Click for details' : ''}`}
-                    >
-                      {appointment.title}
-                    </div>
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-violet-600 rounded-full border-2 border-white" />
                   )}
                   
-                  {dayData?.logged ? (
-                    <div className="h-full">
-                      {/* Center indicator: warning is clickable to open vet prompt */}
+                  {/* Health status indicator */}
+                  {dayData?.logged && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
                       {(() => {
                         const score = computeDailyHealthScore(dayData);
                         const isRed = score !== null && score < 40;
                         if (isRed) {
                           return (
-                            <div
-                              className="absolute inset-0 flex items-center justify-center"
-                              title={score !== null ? `Health ${score}%${!readOnly ? ' - Click to chat with a vet' : ''}` : 'Health n/a'}
-                              onClick={!readOnly ? (e) => {
-                                e.stopPropagation();
-                                startVetChat(date);
-                              } : undefined}
-                            >
-                              <span className="text-2xl">⚠️</span>
+                            <div className="w-2.5 h-2.5 bg-red-500 rounded-full flex items-center justify-center">
+                              <span className="text-[5px] text-white">⚠️</span>
                             </div>
                           );
                         }
                         return (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" title={score !== null ? `Health ${score}%` : 'Health n/a'}>
-                            <Check className={`w-8 h-8 ${getHealthColorByScore(score)}`} />
+                          <div className="w-2.5 h-2.5 bg-green-500 rounded-full flex items-center justify-center">
+                            <Check className="w-1.5 h-1.5 text-white" />
                           </div>
                         );
                       })()}
-
-                      {/* Bottom row: energy avatar + weight */}
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[11px] leading-none text-muted-foreground">
-                        <Avatar className="h-6 w-6 border border-border shadow-sm shrink-0">
-                          <AvatarFallback className="text-[10px]">{getEnergyEmoji(dayData.energy)}</AvatarFallback>
-                        </Avatar>
-                        {typeof dayData.weight === 'number' && dayData.weight > 0 && (
-                          <span className="whitespace-nowrap">Wt: {dayData.weight} lb</span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      {!readOnly && <Plus className="w-4 h-4 text-muted-foreground" />}
                     </div>
                   )}
+                </div>
+                
+                {/* Day label */}
+                <div className="text-xs mt-1 text-center">
+                  {isTodayDate ? 'TODAY' : format(date, 'd')}
                 </div>
               </div>
             );
           })}
         </div>
       </Card>
+
+      {/* Main Health Display Area */}
+      {selectedDate && (
+        <Card className="p-6 bg-gradient-card shadow-card border-primary/20">
+          {/* Date Header */}
+          <div className="text-center mb-6">
+            {isToday(selectedDate) && (
+              <div className="inline-block bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
+                TODAY
+              </div>
+            )}
+          </div>
+
+          {/* Health Score and Energy Emoji - Centered */}
+          <div className="text-center mb-6">
+            {(() => {
+              const dayData = getDayData(selectedDate);
+              if (dayData?.logged) {
+                const score = computeDailyHealthScore(dayData);
+                return (
+                  <div className="space-y-4">
+                    {/* Health Score */}
+                    <div>
+                      <div className="text-xl font-bold mb-2">Health Score: {score || 'N/A'}%</div>
+                      <div className={`text-base ${getHealthColorByScore(score)}`}>
+                        {score !== null && score < 40 ? '⚠️ Needs Attention' : 
+                         score !== null && score < 70 ? '⚠️ Monitor Closely' : '✅ Good Health'}
+                      </div>
+                    </div>
+
+                    {/* Energy Emoji - Large and Centered */}
+                    <div className="text-6xl mb-3">
+                      {getEnergyEmoji(dayData.energy)}
+                    </div>
+                    <div className="text-lg font-semibold text-muted-foreground">
+                      Energy Level: {dayData.energy}/10
+                    </div>
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="space-y-4">
+                    <div className="text-5xl mb-3">📝</div>
+                    <h4 className="text-xl font-semibold mb-2">No Health Data Logged</h4>
+                    <p className="text-muted-foreground">
+                      {readOnly ? 'No health data available for this date.' : 'Log your pet\'s health data for this day.'}
+                    </p>
+                    {!readOnly && (
+                      <Button onClick={() => setShowLogger(true)} size="lg">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Log Health Data
+                      </Button>
+                    )}
+                  </div>
+                );
+              }
+            })()}
+          </div>
+
+          {/* Health Details with Sliders and Metrics */}
+          {(() => {
+            const dayData = getDayData(selectedDate);
+            if (dayData?.logged) {
+              return (
+                <div className="space-y-4">
+                  {/* Appointment Information */}
+                  {(() => {
+                    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+                    const appointment = appointments.find(a => a.date === dateStr);
+                    if (appointment) {
+                      return (
+                        <div className="bg-violet-50 border border-violet-200 rounded-lg p-3">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Calendar className="h-4 w-4 text-violet-600" />
+                            <h4 className="font-semibold text-violet-800">{appointment.title}</h4>
+                            <Badge variant="secondary" className="bg-violet-100 text-violet-800">
+                              {appointment.type || 'appointment'}
+                            </Badge>
+                          </div>
+                          {appointment.veterinarian && (
+                            <p className="text-sm text-violet-700">Vet: {appointment.veterinarian}</p>
+                          )}
+                          {appointment.notes && (
+                            <p className="text-sm text-violet-600 mt-2">{appointment.notes}</p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {/* Health Metrics with Sliders */}
+                  <div className="space-y-4">
+                    {/* Energy Slider */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-medium flex items-center space-x-2">
+                          <Zap className="h-4 w-4 text-yellow-600" />
+                          <span>Energy Level</span>
+                        </Label>
+                        <span className="text-sm font-bold">{dayData.energy}/10</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(dayData.energy / 10) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Food Slider */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-medium flex items-center space-x-2">
+                          <Utensils className="h-4 w-4 text-green-600" />
+                          <span>Food Intake</span>
+                        </Label>
+                        <span className="text-sm font-bold">{dayData.food}/10</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(dayData.food / 10) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Water Slider */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm font-medium flex items-center space-x-2">
+                          <Droplets className="h-4 w-4 text-blue-600" />
+                          <span>Water Intake</span>
+                        </Label>
+                        <span className="text-sm font-bold">{dayData.water}/10</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(dayData.water / 10) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Weight Display */}
+                    <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg border">
+                      <Label className="text-sm font-medium flex items-center space-x-2">
+                        <Scale className="h-4 w-4 text-purple-600" />
+                        <span>Weight</span>
+                      </Label>
+                      <span className="text-sm font-bold">{dayData.weight} lbs</span>
+                    </div>
+
+                    {/* Urine Color Dots */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Urine Color</Label>
+                      <div className="flex space-x-2">
+                        {['Clear', 'Pale Yellow', 'Yellow', 'Dark Yellow', 'Amber', 'Brown'].map((color) => (
+                          <div
+                            key={color}
+                            className={`w-6 h-6 rounded-full border-2 transition-all ${
+                              dayData.urineColor === color 
+                                ? "border-primary scale-110" 
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
+                            style={{
+                              backgroundColor: color === 'Clear' ? '#f0f9ff' :
+                                            color === 'Pale Yellow' ? '#fefce8' :
+                                            color === 'Yellow' ? '#fef3c7' :
+                                            color === 'Dark Yellow' ? '#fde68a' :
+                                            color === 'Amber' ? '#f59e0b' :
+                                            color === 'Brown' ? '#92400e' : '#ffffff'
+                            }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                      {dayData.urineColor && (
+                        <div className="text-xs text-muted-foreground">
+                          Selected: {dayData.urineColor}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Poop Consistency Dots */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Poop Consistency</Label>
+                      <div className="flex space-x-2">
+                        {['Hard', 'Firm', 'Soft', 'Loose', 'Watery'].map((consistency) => (
+                          <div
+                            key={consistency}
+                            className={`w-6 h-6 rounded-full border-2 transition-all flex items-center justify-center text-xs font-bold ${
+                              dayData.poopConsistency === consistency 
+                                ? "border-primary scale-110 text-white" 
+                                : "border-gray-300 hover:border-gray-400 text-gray-600"
+                            }`}
+                            style={{
+                              backgroundColor: dayData.poopConsistency === consistency 
+                                ? '#8b5cf6' 
+                                : consistency === 'Hard' ? '#fef2f2' :
+                                  consistency === 'Firm' ? '#fef3c7' :
+                                  consistency === 'Soft' ? '#fde68a' :
+                                  consistency === 'Loose' ? '#f59e0b' :
+                                  consistency === 'Watery' ? '#dc2626' : '#f3f4f6'
+                            }}
+                            title={consistency}
+                          >
+                            {consistency.charAt(0)}
+                          </div>
+                        ))}
+                      </div>
+                      {dayData.poopConsistency && (
+                        <div className="text-xs text-muted-foreground">
+                          Selected: {dayData.poopConsistency}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Poop Color Dots */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Poop Color</Label>
+                      <div className="flex space-x-2">
+                        {['Brown', 'Dark Brown', 'Light Brown', 'Green', 'Yellow', 'Black', 'Red'].map((color) => (
+                          <div
+                            key={color}
+                            className={`w-6 h-6 rounded-full border-2 transition-all ${
+                              dayData.poopColor === color 
+                                ? "border-primary scale-110" 
+                                : "border-gray-300 hover:border-gray-400"
+                            }`}
+                            style={{
+                              backgroundColor: color === 'Brown' ? '#92400e' :
+                                            color === 'Dark Brown' ? '#78350f' :
+                                            color === 'Light Brown' ? '#d97706' :
+                                            color === 'Green' ? '#059669' :
+                                            color === 'Yellow' ? '#eab308' :
+                                            color === 'Black' ? '#1f2937' :
+                                            color === 'Red' ? '#dc2626' : '#ffffff'
+                            }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                      {dayData.poopColor && (
+                        <div className="text-xs text-muted-foreground">
+                          Selected: {dayData.poopColor}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+
+
+                  {/* Warning Action Button */}
+                  {(() => {
+                    const score = computeDailyHealthScore(dayData);
+                    return score !== null && score < 40 && !readOnly ? (
+                      <div className="text-center">
+                        <Button 
+                          onClick={() => startVetChat(selectedDate)}
+                          variant="destructive"
+                          size="sm"
+                          className="w-full max-w-sm"
+                        >
+                          ⚠️ Chat with Vet - Health Needs Attention
+                        </Button>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </Card>
+      )}
+
+      {/* Navigation Arrows */}
+      {selectedDate && (
+        <div className="flex justify-center space-x-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const prevDate = subDays(selectedDate, 1);
+              setSelectedDate(prevDate);
+            }}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const nextDate = addDays(selectedDate, 1);
+              setSelectedDate(nextDate);
+            }}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
 
       {/* Metrics Logger Modal */}
       {showLogger && selectedDate && (
